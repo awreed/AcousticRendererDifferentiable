@@ -23,19 +23,28 @@ class Beamformer:
         self.yVect = np.linspace(self.sceneDimY[0], self.sceneDimY[1], self.nPix[1])
         self.zVect = np.linspace(self.sceneDimZ[0], self.sceneDimZ[1], self.nPix[2])
 
+        self.dim = kwargs.get('dim', 3)
+
         self.scene = None
 
-        self.numPix = np.size(self.xVect) * np.size(self.yVect) * np.size(self.zVect)
-        self.sceneCenter = np.array([np.median(self.xVect), np.median(self.yVect), np.median(self.zVect)])
-        (x, y, z) = np.meshgrid(self.xVect, self.yVect, self.zVect)
-        pixPos = np.hstack(
-            (np.reshape(x, (np.size(x), 1)), np.reshape(y, (np.size(y), 1)), np.reshape(z, (np.size(z), 1))))
-        # Convert pixel positions to tensor
-        self.pixPos = torch.from_numpy(pixPos).cuda()
-        self.pixPos.requires_grad = True
-
-
-
+        if self.dim == 3:
+            self.numPix = np.size(self.xVect) * np.size(self.yVect) * np.size(self.zVect)
+            self.sceneCenter = np.array([np.median(self.xVect), np.median(self.yVect), np.median(self.zVect)])
+            (x, y, z) = np.meshgrid(self.xVect, self.yVect, self.zVect)
+            pixPos = np.hstack(
+                (np.reshape(x, (np.size(x), 1)), np.reshape(y, (np.size(y), 1)), np.reshape(z, (np.size(z), 1))))
+            # Convert pixel positions to tensor
+            self.pixPos = torch.from_numpy(pixPos).cuda()
+            self.pixPos.requires_grad = True
+        else:
+            self.numPix = np.size(self.xVect) * np.size(self.yVect)
+            self.sceneCenter = np.array([np.median(self.xVect), np.median(self.yVect), np.median(self.zVect)])
+            (x, y) = np.meshgrid(self.xVect, self.yVect)
+            pixPos = np.hstack(
+                (np.reshape(x, (np.size(x), 1)), np.reshape(y, (np.size(y), 1))))
+            # Convert pixel positions to tensor
+            self.pixPos = torch.from_numpy(pixPos).cuda()
+            self.pixPos.requires_grad = True
 
     def beamformTest(self, RP):
         numProj = len(RP.projDataArray)
@@ -48,31 +57,34 @@ class Beamformer:
         for i in range(0, numProj):
             projWfmList.append(RP.projDataArray[i].wfmRC)
         wfmData = torch.stack(projWfmList)
+       #h = wfmData.register_hook(lambda x: print("wfmData" + str(x[:, :, 0].nonzero().data)))
+       # RP.hooks.append(h)
 
         pixGridReal = []
         pixGridImag = []
 
         # Much faster now that I loop over projectors rather than pixels
-        x = torch.ones(self.numPix, 3)
+        x = torch.ones(self.numPix, 2)
+        z = (torch.ones(self.numPix) * torch.tensor(RP.zs[0]))**2
+
+
         for i in range(0, RP.numProj):
             posVec_pix = x * posVec[i, :]
-            tofs = 2 * torch.sqrt(torch.sum((self.pixPos - posVec_pix)**2, 1))
+            sum = torch.sum((self.pixPos - posVec_pix)**2, 1)
+            #print(sum)
+            tot_sum = sum + z
+            tofs = 2 * torch.sqrt(tot_sum)
+            #tofs = 2 * torch.sqrt(torch.sum(torch.sum((self.pixPos - posVec_pix)**2, 1), (z*torch.tensor([RP.zs[0]]))**2, 1))
             tof_ind = torch.round((tofs / torch.tensor(RP.c)) * torch.tensor(RP.Fs)).long()
+            #print(tof_ind)
 
-            pixGridReal.append(wfmData[i, tof_ind, 0])
-            pixGridImag.append(wfmData[i, tof_ind, 1])
+            pixGridReal.append(wfmData[i, tof_ind.detach(), 0])
+            pixGridImag.append(wfmData[i, tof_ind.detach(), 1])
 
         self.scene = torch.stack(((torch.sum(torch.stack(pixGridReal), 0)), torch.sum(torch.stack(pixGridImag), 0)), dim=1)
-
+        #h = self.scene.register_hook(lambda x: print("scene" + str(x)))
+        #RP.hooks.append(h)
         return self.scene
-
-
-
-
-
-
-
-
 
     def beamform(self, RP):
         numProj = len(RP.projDataArray)

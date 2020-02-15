@@ -13,6 +13,8 @@ class ProjData:
         #self.wfm = torch.zeros((int(self.Fs*self.tDur)), requires_grad=True)
         self.wfm = None
         self.wfmRC = None
+        self.t = None
+        self.tau = None
 
     def RC(self, transmitSignal):
         # Replica-correlate using the fft

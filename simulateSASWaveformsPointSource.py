@@ -15,20 +15,27 @@ def simulateSASWaveformsPointSource(RP, ps):
     psShape = ps.shape
     dim = list(shape)[1]
     count = 0
+    #h = ps.register_hook(lambda x: print(x))
+    #RP.hooks.append(h)
     for i in range(0, numScat):
         for j in range(0, RP.numProj):
             pData = ProjData.ProjData(projPos=RP.projectors[j, :], Fs=RP.Fs, tDur=RP.tDur)
 
-            #if dim == 3:
-            #    t = torch.sqrt(torch.sum(torch.pow(pData.projPos - ps[i, :], 2)))
-            #else:
-            z = torch.tensor(0.0).cuda()
-            ps_conv = torch.cat((ps[i, :], z.reshape(1))).cuda()
-            t = torch.sqrt(torch.sum((pData.projPos - ps_conv)**2))
-
+            if dim == 3:
+                t = torch.sqrt(torch.sum(torch.pow(pData.projPos - ps[i, :], 2)))
+            else:
+                t = torch.sqrt(torch.sum((pData.projPos - ps[i, :])**2) + torch.tensor(RP.zs[0])**2)
+            #print(pData.projPos)
+            #h = t.register_hook(lambda x: print("t gradient: " + str(x)))
+            #RP.hooks.append(h)
+            #print(pData.projPos)
             tau = (t * 2) / torch.tensor(RP.c, requires_grad=True)
+            #tau = t/torch.tensor(RP.c, requires_grad=True)
 
             pData.wfm = torchTimeDelay(RP.transmitSignal, torch.tensor(RP.Fs, requires_grad=True),
-                                       tau)
+                                           tau, RP)
+            #h = pData.wfm.register_hook(lambda x: print(x.min(), x.max()))
+            #RP.hooks.append(h)
+
             pData.RCTorch(RP.transmitSignal)
             RP.projDataArray.append(pData)

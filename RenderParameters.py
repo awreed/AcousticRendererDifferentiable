@@ -10,7 +10,7 @@ class RenderParameters:
         # self.Fs = torch.tensor([kwargs.get('Fs', 100000)], requires_grad=True)
         # self.tDur = torch.tensor([kwargs.get('tDur', .02)], requires_grad=True)
         self.Fs = kwargs.get('Fs', 100000) * 1.0
-        self.tDur = kwargs.get('tDur', .02)
+        self.tDur = kwargs.get('tDur', .04)
         self.nSamples = self.Fs * self.tDur
 
         # Will be used to create torch constant, not differentiable at this time
@@ -55,6 +55,7 @@ class RenderParameters:
         self.zs = None
         self.xStep = None
         self.yStep = None
+        self.hooks = []
 
 
     def generateTransmitSignal(self):
@@ -72,7 +73,7 @@ class RenderParameters:
 
         # Convert transmit signal to tensor
         self.transmitSignal = torch.from_numpy(sig).cuda()
-        self.transmitSignal.requires_grad = False
+        self.transmitSignal.requires_grad = True
 
     def defineProjectorPosGrid(self, **kwargs):
         self.xStart = kwargs.get('xStart', -1)
@@ -95,17 +96,21 @@ class RenderParameters:
         self.ys = np.linspace(self.yStart, self.yStop, self.numYs)
         self.zs = np.linspace(self.zStart, self.zStop, self.numZs)
 
-        projectors = np.zeros((self.numProj, 3))
+        projectors = np.zeros((self.numProj, 2))
 
         count = 0
         for i in range(0, self.numXs):
             for j in range(0, self.numYs):
-                for k in range(0, self.numZs):
-                    projectors[count, :] = [self.xs[i], self.ys[j], self.zs[k]]
-                    count = count + 1
+                projectors[count, :] = [self.xs[i], self.ys[j]]
+                count = count + 1
         self.projectors = torch.from_numpy(projectors).cuda()
         self.projectors.requires_grad = True
 
+    def freeHooks(self, **kwargs):
+        N = len(self.hooks)
+        for i in range(0, N):
+            tmp = self.hooks[i]
+            tmp.remove()
 
 
 
