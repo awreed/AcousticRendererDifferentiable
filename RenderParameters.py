@@ -139,16 +139,19 @@ class RenderParameters:
         self.zs = np.linspace(self.zStart, self.zStop, self.numZs)
 
         # Allocate memory for projector array
-        projectors = np.zeros((self.numProj, 3))
+        projectors = np.zeros((self.numProj, 2))
 
         # Pack every projector position into an array
         count = 0
         for i in range(0, self.numThetas):
             for j in range(0, self.numRs):
-                for k in range(0, self.numZs):
-                    projectors[count, :] = [self.rs[j] * math.cos(np.deg2rad(self.thetas[i])),
-                                            self.rs[j] * math.sin(np.deg2rad(self.thetas[i])), self.zs[k]]
-                    count = count + 1
+                projectors[count, :] = [self.rs[j]*math.cos(np.deg2rad(self.thetas[i])),
+                                        self.rs[j]*math.sin(np.deg2rad(self.thetas[i]))]
+                count += 1
+                #for k in range(0, self.numZs):
+                    #projectors[count, :] = [self.rs[j] * math.cos(np.deg2rad(self.thetas[i])),
+                                            #self.rs[j] * math.sin(np.deg2rad(self.thetas[i])), self.zs[k]]
+                    #count = count + 1
         self.projectors = torch.from_numpy(projectors).cuda()
         self.projectors.requires_grad = True
 

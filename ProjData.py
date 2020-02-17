@@ -16,6 +16,7 @@ class ProjData:
         self.wfmRC = None
         self.t = None
         self.tau = None
+        self.wfms = []
 
     def RC(self, transmitSignal):
         # Replica-correlate using the fft
@@ -27,7 +28,7 @@ class ProjData:
 
 
     def RCTorch(self, transmitSignal):
-        nSamples = self.Fs * self.tDur
+        #nSamples = self.Fs * self.tDur
         pulse = transmitSignal
 
         # Forward fourier transform of transmit signal

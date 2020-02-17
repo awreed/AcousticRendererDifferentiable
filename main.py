@@ -30,14 +30,14 @@ if __name__ == '__main__':
     # Data structure for ground truth projector waveforms
     RP_GT = RenderParameters()
     RP_GT.generateTransmitSignal()
-    #RP_GT.defineProjectorPos(thetaStart=0, thetaStop=359, thetaStep=1, rStart=1, rStop=1, zStart=.3, zStop=.3)
-    RP_GT.defineProjectorPosGrid(xStep=0.2, yStep=0.2)
+    RP_GT.defineProjectorPos(thetaStart=0, thetaStop=359, thetaStep=1, rStart=3, rStop=3, zStart=.3, zStop=.3)
+    #RP_GT.defineProjectorPosGrid(xStep=0.2, yStep=0.2)
 
     # Data structure for estimate projector waveforms
     RP_EST = RenderParameters()
     RP_EST.generateTransmitSignal()
-    #RP_EST.defineProjectorPos(thetaStart=0, thetaStop=359, thetaStep=1, rStart=3, rStop=3, zStart=.3, zStop=.3)
-    RP_EST.defineProjectorPosGrid(xStep=0.2, yStep=0.2)
+    RP_EST.defineProjectorPos(thetaStart=0, thetaStop=359, thetaStep=1, rStart=3, rStop=3, zStart=.3, zStop=.3)
+    #RP_EST.defineProjectorPosGrid(xStep=0.2, yStep=0.2)
 
     # One point source is GT, the other we will try and evolve towards GT
     ps_GT = torch.tensor([[-1.0, -1.0]], requires_grad=True).cuda()

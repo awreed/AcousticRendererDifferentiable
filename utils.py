@@ -46,6 +46,22 @@ def cvtNP(t):
     else:
         return t
 
+def xcorr(t1, t2):
+    #t1_hil = torchHilbert(t1)
+    #t1_norm = t1/torch.norm(t1, p=1.0)
+    T1 = torch.rfft(t1, 1, onesided=False)
+
+    #t2_hil = torchHilbert(t2)
+    #t2_norm = t2/torch.norm(t2, p=1.0)
+    T2 = torch.rfft(t2, 1, onesided=False)
+
+    RC = torch.ifft(compMul(T2, compConj(T1)), 1)[:, 0]
+
+    return RC
+
+
+
+
 
 # https://stackoverflow.com/questions/56380536/hilbert-transform-in-python
 # 0 error against Scipy and works with autograd
