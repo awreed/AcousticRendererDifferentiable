@@ -4,6 +4,7 @@ from scipy.signal import hilbert
 import torch
 from utils import *
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
+from Complex import *
 
 class ProjData:
     def __init__(self, *args, **kwargs):
@@ -23,7 +24,7 @@ class ProjData:
         Pulse = np.fft.fft(hilbert(pulse), int(nSamples))
         Data = np.fft.fft(hilbert(self.wfm), int(nSamples))
         yRC = np.fft.ifft(np.multiply(Data, np.conj(Pulse)))
-        self.wfmRC = yRC.cuda()
+
 
     def RCTorch(self, transmitSignal):
         nSamples = self.Fs * self.tDur
@@ -39,6 +40,6 @@ class ProjData:
 
         # Definition of cross-correlation
         yRC = torch.ifft(compMul(Data, compConj(Pulse)), 1)
-        self.wfmRC = yRC.cuda()
+        self.wfmRC = Complex(real=yRC[:, 0].cuda(), imag=yRC[:, 1].cuda())
 
 

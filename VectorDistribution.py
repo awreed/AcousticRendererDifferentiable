@@ -9,7 +9,7 @@ class VectorDistribution:
         # index 1 contains the other dim if complex array
         N = list(T.shape)[0]
         #absT = torch.abs(T)
-        #mag = torch.norm(absT, p=1)
-        #normVec = absT / mag
+        mag = torch.norm(T, p=1)
+        normVec = T / mag
         indexVec = torch.linspace(1, N, N)
-        return torch.sum(indexVec * T)
+        return torch.sum(indexVec * normVec)

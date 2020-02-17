@@ -9,6 +9,7 @@ import torch
 from utils import *
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 import time
+from Complex import *
 
 
 class Beamformer:
@@ -55,7 +56,7 @@ class Beamformer:
 
         projWfmList = []
         for i in range(0, numProj):
-            projWfmList.append(RP.projDataArray[i].wfmRC)
+            projWfmList.append(RP.projDataArray[i].wfmRC.vector())
         wfmData = torch.stack(projWfmList)
        #h = wfmData.register_hook(lambda x: print("wfmData" + str(x[:, :, 0].nonzero().data)))
        # RP.hooks.append(h)
@@ -81,7 +82,8 @@ class Beamformer:
             pixGridReal.append(wfmData[i, tof_ind.detach(), 0])
             pixGridImag.append(wfmData[i, tof_ind.detach(), 1])
 
-        self.scene = torch.stack(((torch.sum(torch.stack(pixGridReal), 0)), torch.sum(torch.stack(pixGridImag), 0)), dim=1)
+        #self.scene = torch.stack(((torch.sum(torch.stack(pixGridReal), 0)), torch.sum(torch.stack(pixGridImag), 0)), dim=1)
+        self.scene = Complex(real=torch.sum(torch.stack(pixGridReal), 0), imag=torch.sum(torch.stack(pixGridImag), 0))
         #h = self.scene.register_hook(lambda x: print("scene" + str(x)))
         #RP.hooks.append(h)
         return self.scene
